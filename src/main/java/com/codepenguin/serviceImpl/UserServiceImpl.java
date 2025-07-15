@@ -12,11 +12,19 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public User save(User user) {
+    public User save(User user) throws Exception {
+
+
+        User isEmailExists  = userRepository.findByEmail(user.getEmail());
+        if(isEmailExists != null){
+            throw new Exception("email is already registered with another account");
+        }
+
         User newUser = new User();
         newUser.setFullName(user.getFullName());
         newUser.setEmail(user.getEmail());
         newUser.setPassword(user.getPassword());
+
         User savedUser = userRepository.save(newUser);
         return savedUser;
     }
