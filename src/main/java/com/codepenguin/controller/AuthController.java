@@ -2,6 +2,7 @@ package com.codepenguin.controller;
 
 import com.codepenguin.model.User;
 import com.codepenguin.repository.UserRepository;
+import com.codepenguin.response.AuthResponse;
 import com.codepenguin.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,9 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final UserService userService;
     @PostMapping("/signup")
-    public ResponseEntity<User> register(@RequestBody User user) throws Exception {
-        User savedUser = userService.save(user);
-        return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
+    public ResponseEntity<AuthResponse> register(@RequestBody User user) throws Exception {
+        AuthResponse response = userService.save(user);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
 }
