@@ -24,4 +24,10 @@ public class AuthController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @PostMapping("/signin")
+    public ResponseEntity<AuthResponse> login(@RequestBody User user) throws Exception {
+        AuthResponse response = userService.login(user);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 }

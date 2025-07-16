@@ -5,4 +5,5 @@ import com.codepenguin.response.AuthResponse;
 
 public interface UserService {
     public AuthResponse save(User user) throws Exception;
+    public AuthResponse login(User user);
 }
