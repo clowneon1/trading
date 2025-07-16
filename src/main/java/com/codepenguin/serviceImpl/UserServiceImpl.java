@@ -1,11 +1,17 @@
 package com.codepenguin.serviceImpl;
 
 import com.codepenguin.config.JwtProvider;
+import com.codepenguin.model.TwoFactorOTP;
 import com.codepenguin.model.User;
+import com.codepenguin.repository.TwoFactorOtpRepository;
 import com.codepenguin.repository.UserRepository;
 import com.codepenguin.response.AuthResponse;
+import com.codepenguin.service.TwoFactorOtpService;
 import com.codepenguin.service.UserService;
+import com.codepenguin.utils.OtpUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -18,9 +24,10 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final CustomUserDetailsServiceImpl customUserDetailsService;
+    private final TwoFactorOtpService twoFactorOtpService;
 
     @Override
-    public AuthResponse save(User user) throws Exception {
+    public ResponseEntity<AuthResponse> save(User user) throws Exception {
 
         User isEmailExists  = userRepository.findByEmail(user.getEmail());
 
@@ -48,11 +55,11 @@ public class UserServiceImpl implements UserService {
         response.setStatus(true);
         response.setMessage("register success");
 
-        return response;
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @Override
-    public AuthResponse login(User user) {
+    public ResponseEntity<AuthResponse> login(User user) {
         String username = user.getEmail();
         String password = user.getPassword();
         Authentication auth = authenticate(username, password);
@@ -61,12 +68,31 @@ public class UserServiceImpl implements UserService {
 
         String jwt = JwtProvider.generateToken(auth);
 
+        User authUser = userRepository.findByEmail(username);
+
+        if(user.getTwoFactorAuth().isEnable()){
+            AuthResponse response = new AuthResponse();
+            response.setMessage("Two factor auth is enabled");
+            response.setTwoFactorAuthEnable(true);
+            String otp = OtpUtils.generateOtp();
+
+            TwoFactorOTP oldTwoFactorOtp = twoFactorOtpService.findByUser(authUser.getId());
+            if(oldTwoFactorOtp != null){
+                twoFactorOtpService.deleteTwoFactorOtp(oldTwoFactorOtp);
+            }
+            TwoFactorOTP newTwoFactorOTP = twoFactorOtpService.createTwoFactorOtp(authUser, otp, jwt);
+
+            response.setSession(newTwoFactorOTP.getId());
+
+            return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
+        }
+
         AuthResponse response = new AuthResponse();
         response.setJwt(jwt);
         response.setStatus(true);
         response.setMessage("login success");
 
-        return response;
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     private Authentication authenticate(String username, String password) {

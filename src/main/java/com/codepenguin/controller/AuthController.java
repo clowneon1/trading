@@ -20,14 +20,12 @@ public class AuthController {
     private final UserService userService;
     @PostMapping("/signup")
     public ResponseEntity<AuthResponse> register(@RequestBody User user) throws Exception {
-        AuthResponse response = userService.save(user);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        return userService.save(user);
     }
 
     @PostMapping("/signin")
     public ResponseEntity<AuthResponse> login(@RequestBody User user) throws Exception {
-        AuthResponse response = userService.login(user);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return userService.login(user);
     }
 
 }
