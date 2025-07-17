@@ -9,6 +9,7 @@ import com.codepenguin.service.EmailService;
 import com.codepenguin.service.TwoFactorOtpService;
 import com.codepenguin.service.UserService;
 import com.codepenguin.utils.OtpUtils;
+import com.codepenguin.utils.PasswordUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,7 @@ public class AuthServiceImpl implements AuthService {
     private final CustomUserDetailsServiceImpl customUserDetailsService;
     private final TwoFactorOtpService twoFactorOtpService;
     private final EmailService emailService;
+    private final PasswordUtils passwordUtils;
 
     @Override
     public ResponseEntity<AuthResponse> save(User user) throws Exception {
@@ -39,12 +41,13 @@ public class AuthServiceImpl implements AuthService {
         User newUser = new User();
         newUser.setFullName(user.getFullName());
         newUser.setEmail(user.getEmail());
-        newUser.setPassword(user.getPassword());
+        String hashPassword = passwordUtils.generateHash(user.getPassword());
+        newUser.setPassword(hashPassword);
         User savedUser = userService.save(newUser);
 
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 user.getEmail(),
-                user.getPassword()
+                hashPassword
         );
 
         SecurityContextHolder.getContext().setAuthentication(auth);
@@ -121,10 +124,10 @@ public class AuthServiceImpl implements AuthService {
         if(userDetails == null){
             throw new BadCredentialsException("invalid username or password");
         }
-        if(!password.equals(userDetails.getPassword())){
+        if(!passwordUtils.matchPassword(password,userDetails.getPassword())){
             throw new BadCredentialsException("invalid password");
         }
-        return new UsernamePasswordAuthenticationToken(userDetails,password, userDetails.getAuthorities());
+        return new UsernamePasswordAuthenticationToken(userDetails,userDetails.getPassword(),userDetails.getAuthorities());
     }
 
 }
