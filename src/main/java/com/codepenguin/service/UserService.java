@@ -5,6 +5,7 @@ import com.codepenguin.response.AuthResponse;
 import org.springframework.http.ResponseEntity;
 
 public interface UserService {
-    public ResponseEntity<AuthResponse> save(User user) throws Exception;
-    public ResponseEntity<AuthResponse> login(User user);
+    ResponseEntity<AuthResponse> save(User user) throws Exception;
+    ResponseEntity<AuthResponse> login(User user) throws Exception;
+    ResponseEntity<AuthResponse> verifyLoginOtp(String otp, String id) throws Exception;
 }

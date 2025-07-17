@@ -6,6 +6,7 @@ import com.codepenguin.model.User;
 import com.codepenguin.repository.TwoFactorOtpRepository;
 import com.codepenguin.repository.UserRepository;
 import com.codepenguin.response.AuthResponse;
+import com.codepenguin.service.EmailService;
 import com.codepenguin.service.TwoFactorOtpService;
 import com.codepenguin.service.UserService;
 import com.codepenguin.utils.OtpUtils;
@@ -16,8 +17,11 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+
+import java.beans.PersistenceDelegate;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final CustomUserDetailsServiceImpl customUserDetailsService;
     private final TwoFactorOtpService twoFactorOtpService;
+    private final EmailService emailService;
 
     @Override
     public ResponseEntity<AuthResponse> save(User user) throws Exception {
@@ -59,7 +64,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity<AuthResponse> login(User user) {
+    public ResponseEntity<AuthResponse> login(User user) throws Exception{
         String username = user.getEmail();
         String password = user.getPassword();
         Authentication auth = authenticate(username, password);
@@ -84,6 +89,8 @@ public class UserServiceImpl implements UserService {
 
             response.setSession(newTwoFactorOTP.getId());
 
+            emailService.sendVerificationOtpEmail(username, otp);
+
             return new ResponseEntity<>(response, HttpStatus.ACCEPTED);
         }
 
@@ -95,6 +102,24 @@ public class UserServiceImpl implements UserService {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @Override
+    public ResponseEntity<AuthResponse> verifyLoginOtp(String otp, String id) throws Exception {
+        TwoFactorOTP twoFactorOTP = twoFactorOtpService.findById(id);
+
+        if(twoFactorOtpService.verifyTwoFactorOtp(twoFactorOTP, otp)){
+            AuthResponse response = new AuthResponse();
+            response.setMessage("Two factor Authentication Verified");
+            response.setTwoFactorAuthEnable(true);
+            response.setJwt(twoFactorOTP.getJwt());
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+        throw new Exception("Invalid Otp");
+    }
+
+    /**
+     * Below are the helper methods for service Implementation
+     */
+
     private Authentication authenticate(String username, String password) {
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
         if(userDetails == null){
@@ -105,4 +130,5 @@ public class UserServiceImpl implements UserService {
         }
         return new UsernamePasswordAuthenticationToken(userDetails,password, userDetails.getAuthorities());
     }
+
 }
