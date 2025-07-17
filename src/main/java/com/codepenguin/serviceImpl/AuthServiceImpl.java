@@ -3,11 +3,11 @@ package com.codepenguin.serviceImpl;
 import com.codepenguin.config.JwtProvider;
 import com.codepenguin.model.TwoFactorOTP;
 import com.codepenguin.model.User;
-import com.codepenguin.repository.UserRepository;
 import com.codepenguin.response.AuthResponse;
+import com.codepenguin.service.AuthService;
 import com.codepenguin.service.EmailService;
 import com.codepenguin.service.TwoFactorOtpService;
-import com.codepenguin.service.AuthService;
+import com.codepenguin.service.UserService;
 import com.codepenguin.utils.OtpUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final CustomUserDetailsServiceImpl customUserDetailsService;
     private final TwoFactorOtpService twoFactorOtpService;
     private final EmailService emailService;
@@ -30,7 +30,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ResponseEntity<AuthResponse> save(User user) throws Exception {
 
-        User isEmailExists  = userRepository.findByEmail(user.getEmail());
+        User isEmailExists  = userService.findUserByEmail(user.getEmail());
 
         if(isEmailExists != null){
             throw new Exception("email is already registered with another account");
@@ -40,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
         newUser.setFullName(user.getFullName());
         newUser.setEmail(user.getEmail());
         newUser.setPassword(user.getPassword());
-        User savedUser = userRepository.save(newUser);
+        User savedUser = userService.save(newUser);
 
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 user.getEmail(),
@@ -69,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
 
         String jwt = JwtProvider.generateToken(auth);
 
-        User authUser = userRepository.findByEmail(username);
+        User authUser = userService.findUserByEmail(username);
 
         if(user.getTwoFactorAuth().isEnable()){
             AuthResponse response = new AuthResponse();
