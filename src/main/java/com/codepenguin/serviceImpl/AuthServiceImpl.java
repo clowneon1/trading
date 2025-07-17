@@ -3,12 +3,11 @@ package com.codepenguin.serviceImpl;
 import com.codepenguin.config.JwtProvider;
 import com.codepenguin.model.TwoFactorOTP;
 import com.codepenguin.model.User;
-import com.codepenguin.repository.TwoFactorOtpRepository;
 import com.codepenguin.repository.UserRepository;
 import com.codepenguin.response.AuthResponse;
 import com.codepenguin.service.EmailService;
 import com.codepenguin.service.TwoFactorOtpService;
-import com.codepenguin.service.UserService;
+import com.codepenguin.service.AuthService;
 import com.codepenguin.utils.OtpUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,15 +16,12 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.parameters.P;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.beans.PersistenceDelegate;
-
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService {
+public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final CustomUserDetailsServiceImpl customUserDetailsService;
     private final TwoFactorOtpService twoFactorOtpService;
