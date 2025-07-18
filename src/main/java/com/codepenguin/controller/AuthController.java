@@ -22,7 +22,7 @@ public class AuthController {
         return authService.login(user);
     }
 
-    @PostMapping("/verify/{otp}")
+    @PostMapping("/two-factor/otp/{otp}")
     public ResponseEntity<AuthResponse> verifySigninOtp(
             @PathVariable String otp,
             @RequestParam String id) throws Exception {
